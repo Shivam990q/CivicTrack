@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate, useLocation } from "react-router-dom";
-import { User, Settings, LogOut, Home, FileText, Plus, Building2, Shield } from "lucide-react";
+import { User, Settings, LogOut, Home, FileText, Plus, Building2, Shield, AlertCircle } from "lucide-react";
 
 interface HeaderProps {
   onLoginClick?: () => void;
@@ -39,12 +39,34 @@ export function Header({ onLoginClick, isLoggedIn = false, userName, isAdmin = f
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
               <>
+                {/* Report Issue Button - Prominent for logged-in users */}
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => navigate('/report')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium hidden md:flex"
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Report Issue
+                </Button>
+
+                {/* My Issues Button */}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/my-issues')}
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 font-medium hidden md:flex"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  My Issues
+                </Button>
+
                 {isAdmin && (
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => navigate('/admin')}
-                    className="hidden md:flex"
+                    className="hidden lg:flex"
                   >
                     <Building2 className="w-4 h-4 mr-2" />
                     Admin
@@ -76,9 +98,18 @@ export function Header({ onLoginClick, isLoggedIn = false, userName, isAdmin = f
                       </div>
                     </div>
                     <DropdownMenuSeparator />
+                    {/* Report Issue for mobile */}
+                    <DropdownMenuItem onClick={() => navigate('/report')} className="md:hidden">
+                      <AlertCircle className="mr-2 h-4 w-4" />
+                      <span>Report Issue</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/my-issues')}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      <span>My Issues</span>
                     </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem onClick={() => navigate('/admin')}>

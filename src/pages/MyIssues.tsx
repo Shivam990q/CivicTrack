@@ -5,8 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus } from "lucide-react";
 import { Header } from "@/components/Header";
 import { IssueCard, Issue } from "@/components/IssueCard";
-import potholeImage from "@/assets/pothole-sample.jpg";
-import streetlightImage from "@/assets/streetlight-sample.jpg";
+// Using images from public folder instead of assets
 
 // Mock user issues - would come from API in real app
 const mockUserIssues: Issue[] = [
@@ -19,7 +18,7 @@ const mockUserIssues: Issue[] = [
     location: 'C.G road, Ahmedabad',
     reportedBy: 'You',
     reportedAt: 'Jan 02, 2025',
-    image: streetlightImage,
+    image: '/missing manhole cover.png',
   },
   {
     id: '2',
@@ -30,7 +29,51 @@ const mockUserIssues: Issue[] = [
     location: 'C.G road, Ahmedabad, Gujarat',
     reportedBy: 'You',
     reportedAt: 'Jan 01, 2025',
-    image: potholeImage,
+    image: '/Pothole on main road.png',
+  },
+  {
+    id: '3',
+    title: 'Illegal parking',
+    description: 'Vehicles parked illegally blocking the main road',
+    category: 'Traffic',
+    status: 'reported',
+    location: 'Navrangpura, Ahmedabad',
+    reportedBy: 'You',
+    reportedAt: 'Jan 05, 2025',
+    image: '/illegal parking.png',
+  },
+  {
+    id: '4',
+    title: 'Garbage not collected',
+    description: 'Garbage is not collected since weeks',
+    category: 'Cleanliness',
+    status: 'resolved',
+    location: 'IT society, Ahmedabad',
+    reportedBy: 'You',
+    reportedAt: 'Jan 10, 2025',
+    image: '/hole.png',
+  },
+  {
+    id: '5',
+    title: 'Broken street furniture',
+    description: 'Street furniture like benches and bins are broken',
+    category: 'Obstructions',
+    status: 'progress',
+    location: 'Law Garden, Ahmedabad',
+    reportedBy: 'You',
+    reportedAt: 'Jan 15, 2025',
+    image: '/broken street furniture.png',
+  },
+  {
+    id: '6',
+    title: 'Water supply issue',
+    description: 'Water supply has been disrupted in the area',
+    category: 'Water Supply',
+    status: 'reported',
+    location: 'Bodakdev, Ahmedabad',
+    reportedBy: 'You',
+    reportedAt: 'Jan 20, 2025',
+    image: '/flood.png',
   }
 ];
 

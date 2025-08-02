@@ -12,6 +12,8 @@ import { Header } from "@/components/Header";
 import { useToast } from "@/hooks/use-toast";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { LocationPicker } from "@/components/LocationPicker";
+import { getImageForCategory } from "@/lib/imageMapping";
+import { issuesAPI, categoriesAPI, type Category } from "@/lib/api";
 
 export default function ReportIssue() {
   const navigate = useNavigate();
@@ -19,6 +21,8 @@ export default function ReportIssue() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -32,7 +36,7 @@ export default function ReportIssue() {
     address: string;
   } | null>(null);
 
-  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
 
   useEffect(() => {
     // Check if user is logged in
@@ -50,7 +54,36 @@ export default function ReportIssue() {
     } else {
       navigate('/login');
     }
-  }, [navigate]);
+
+    // Fetch categories from API
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const apiCategories = await categoriesAPI.getCategories();
+        setCategories(apiCategories);
+      } catch (error: any) {
+        console.error('Failed to fetch categories:', error);
+        toast({
+          title: "Error loading categories",
+          description: "Using default categories. Some features may be limited.",
+          variant: "destructive"
+        });
+        // Fallback to default categories
+        setCategories([
+          { id: 1, name: 'Roads' },
+          { id: 2, name: 'Lighting' },
+          { id: 3, name: 'Water Supply' },
+          { id: 4, name: 'Cleanliness' },
+          { id: 5, name: 'Public Safety' },
+          { id: 6, name: 'Obstructions' },
+        ]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,45 +109,34 @@ export default function ReportIssue() {
     setSubmitting(true);
     
     try {
-      // Simulate API call for issue submission
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Create mock issue data
-      const newIssue = {
-        id: `issue-${Date.now()}`,
+      // Create issue using real API
+      const issueData = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        status: 'reported' as const,
+        latitude: selectedLocation.lat,
+        longitude: selectedLocation.lng,
         location: selectedLocation.address,
-        reportedBy: formData.anonymous ? 'Anonymous' : user.username,
-        reportedAt: new Date().toLocaleDateString(),
-        image: uploadedPhotos[0] || '/placeholder.svg',
-        coordinates: {
-          lat: selectedLocation.lat,
-          lng: selectedLocation.lng
-        },
-        photos: uploadedPhotos
+        anonymous: formData.anonymous,
+        photos: uploadedPhotos.length > 0 ? uploadedPhotos : undefined
       };
 
-      // Store in localStorage for demo purposes
-      const existingIssues = JSON.parse(localStorage.getItem('civictrack_issues') || '[]');
-      existingIssues.unshift(newIssue);
-      localStorage.setItem('civictrack_issues', JSON.stringify(existingIssues));
+      const newIssue = await issuesAPI.createIssue(issueData);
 
       toast({
         title: "Issue Reported Successfully",
         description: "Your issue has been submitted and will be reviewed by local authorities",
       });
 
-      // Navigate back to home
+      // Navigate back to home after a short delay
       setTimeout(() => {
         navigate('/');
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error submitting issue:', error);
       toast({
         title: "Submission Failed",
-        description: "Failed to submit issue. Please try again.",
+        description: error?.message || "Failed to submit issue. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -130,10 +152,13 @@ export default function ReportIssue() {
   };
 
   const handleSelectChange = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      category: value
-    }));
+    // Only update if it's a valid category (not loading or disabled options)
+    if (value && value !== 'loading' && value !== 'no-categories') {
+      setFormData(prev => ({
+        ...prev,
+        category: value
+      }));
+    }
   };
 
   const handleAnonymousChange = (checked: boolean) => {
@@ -147,9 +172,8 @@ export default function ReportIssue() {
     setSelectedLocation(location);
   };
 
-  const handlePhotosChange = (photos: any[]) => {
-    // In a real app, this would handle the uploaded photo URLs
-    setUploadedPhotos(photos.map((_, index) => `https://api.civictrack.com/uploads/photo-${Date.now()}-${index}.jpg`));
+  const handlePhotosChange = (photos: File[]) => {
+    setUploadedPhotos(photos);
   };
 
   if (!user) {
@@ -195,15 +219,29 @@ export default function ReportIssue() {
                   <Label htmlFor="category">Category *</Label>
                   <Select value={formData.category} onValueChange={handleSelectChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select issue category" />
+                      <SelectValue placeholder={loadingCategories ? "Loading categories..." : "Select issue category"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Roads">Roads (potholes, obstructions)</SelectItem>
-                      <SelectItem value="Lighting">Lighting (broken or flickering lights)</SelectItem>
-                      <SelectItem value="Water Supply">Water Supply (leaks, low pressure)</SelectItem>
-                      <SelectItem value="Cleanliness">Cleanliness (overflowing bins, garbage)</SelectItem>
-                      <SelectItem value="Public Safety">Public Safety (open manholes, exposed wiring)</SelectItem>
-                      <SelectItem value="Obstructions">Obstructions (fallen trees, debris)</SelectItem>
+                      {loadingCategories ? (
+                        <SelectItem value="loading" disabled>
+                          Loading categories...
+                        </SelectItem>
+                      ) : categories.length > 0 ? (
+                        categories.map((category) => (
+                          <SelectItem key={category.id} value={category.name}>
+                            {category.name}
+                            {category.description && (
+                              <span className="text-xs text-muted-foreground ml-2">
+                                ({category.description})
+                              </span>
+                            )}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-categories" disabled>
+                          No categories available
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -253,12 +291,17 @@ export default function ReportIssue() {
                   className="w-full" 
                   variant="civic"
                   size="lg"
-                  disabled={submitting}
+                  disabled={submitting || loadingCategories}
                 >
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Submitting Issue...
+                    </>
+                  ) : loadingCategories ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
                     </>
                   ) : (
                     'Submit Issue'

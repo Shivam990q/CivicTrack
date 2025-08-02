@@ -9,6 +9,7 @@ import { IssueCard, Issue } from "@/components/IssueCard";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useToast } from "@/hooks/use-toast";
 import { issuesAPI, categoriesAPI, Issue as APIIssue, Category } from "@/lib/api";
+import { getImageForCategory } from "@/lib/imageMapping";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -25,7 +26,7 @@ const mockIssues: Issue[] = [
     location: 'gota bridge, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Aug 19',
-    image: '/missing manhole cover.jpg',
+    image: '/broken street furniture.png',
     distance: '2.8 km',
     coordinates: { lat: 23.0225, lng: 72.5714 }
   },
@@ -38,7 +39,7 @@ const mockIssues: Issue[] = [
     location: 'C.G road, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Jun 02',
-    image: '/Pothole on main road.jpg',
+    image: '/Pothole on main road.png',
     distance: '1.1 km',
     coordinates: { lat: 23.0255, lng: 72.5754 }
   },
@@ -51,7 +52,7 @@ const mockIssues: Issue[] = [
     location: 'IT society, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Jun 25',
-    image: '/hole.jpeg',
+    image: '/hole.png',
     distance: '1.1 km',
     coordinates: { lat: 23.0205, lng: 72.5674 }
   },
@@ -64,7 +65,7 @@ const mockIssues: Issue[] = [
     location: 'Satellite area, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Aug 15',
-    image: '/Road marking faded.webp',
+    image: '/Road marking faded.png',
     distance: '3.2 km',
     coordinates: { lat: 23.0245, lng: 72.5734 }
   },
@@ -77,7 +78,7 @@ const mockIssues: Issue[] = [
     location: 'Vastrapur, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Jul 10',
-    image: '/missing manhole cover.jpg',
+    image: '/missing manhole cover.png',
     distance: '2.5 km',
     coordinates: { lat: 23.0265, lng: 72.5774 }
   },
@@ -90,7 +91,7 @@ const mockIssues: Issue[] = [
     location: 'Navrangpura, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Aug 05',
-    image: '/illegal parking.jpeg',
+    image: '/high traffic.png',
     distance: '1.8 km',
     coordinates: { lat: 23.0185, lng: 72.5654 }
   },
@@ -103,7 +104,7 @@ const mockIssues: Issue[] = [
     location: 'Law Garden, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Jul 20',
-    image: '/broken street furniture.jpeg',
+    image: '/illegal parking.png',
     distance: '2.1 km',
     coordinates: { lat: 23.0200, lng: 72.5700 }
   },
@@ -116,7 +117,7 @@ const mockIssues: Issue[] = [
     location: 'Manek Chowk, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Aug 12',
-    image: '/Street vendor obstruction.jpeg',
+    image: '/Street vendor obstruction.png',
     distance: '3.5 km',
     coordinates: { lat: 23.0220, lng: 72.5720 }
   },
@@ -129,7 +130,7 @@ const mockIssues: Issue[] = [
     location: 'Bodakdev, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Aug 08',
-    image: '/Pothole on main road.jpg',
+    image: '/flood.png',
     distance: '4.2 km',
     coordinates: { lat: 23.0240, lng: 72.5740 }
   },
@@ -142,7 +143,7 @@ const mockIssues: Issue[] = [
     location: 'Paldi, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Jul 28',
-    image: '/hole.jpeg',
+    image: '/placeholder.svg',
     distance: '3.8 km',
     coordinates: { lat: 23.0260, lng: 72.5760 }
   },
@@ -155,7 +156,7 @@ const mockIssues: Issue[] = [
     location: 'Ellis Bridge, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Aug 10',
-    image: '/Road marking faded.webp',
+    image: '/flood.png',
     distance: '2.9 km',
     coordinates: { lat: 23.0280, lng: 72.5780 }
   },
@@ -168,9 +169,35 @@ const mockIssues: Issue[] = [
     location: 'Gujarat High Court, ahmedabad, gujarat',
     reportedBy: 'Anonymous',
     reportedAt: 'Aug 14',
-    image: '/illegal parking.jpeg',
+    image: '/broken street furniture.png',
     distance: '1.5 km',
     coordinates: { lat: 23.0300, lng: 72.5800 }
+  },
+  {
+    id: '13',
+    title: 'Parking violation',
+    description: 'Vehicles parked in no-parking zone causing obstruction.',
+    category: 'Parking',
+    status: 'reported',
+    location: 'Satellite area, ahmedabad, gujarat',
+    reportedBy: 'Anonymous',
+    reportedAt: 'Aug 16',
+    image: '/parking.png',
+    distance: '2.3 km',
+    coordinates: { lat: 23.0240, lng: 72.5740 }
+  },
+  {
+    id: '14',
+    title: 'Traffic rules violation',
+    description: 'Drivers not following traffic rules at intersection.',
+    category: 'Traffic Rules',
+    status: 'reported',
+    location: 'Navrangpura, ahmedabad, gujarat',
+    reportedBy: 'Anonymous',
+    reportedAt: 'Aug 18',
+    image: '/rules break.png',
+    distance: '1.7 km',
+    coordinates: { lat: 23.0185, lng: 72.5654 }
   }
 ];
 
@@ -264,34 +291,7 @@ const Index = () => {
       }
     }
 
-    // Get appropriate image based on category
-    const getImageForCategory = (category: string | any) => {
-      const categoryName = typeof category === 'string' ? category : (category as any)?.name;
-      switch (categoryName?.toLowerCase()) {
-        case 'streetlight':
-          return '/missing manhole cover.jpg';
-        case 'road':
-          return '/Pothole on main road.jpg';
-        case 'garbage collection':
-          return '/hole.jpeg';
-        case 'water supply':
-          return '/hole.jpeg';
-        case 'public safety':
-          return '/missing manhole cover.jpg';
-        case 'obstructions':
-          return '/broken street furniture.jpeg';
-        case 'traffic signal':
-          return '/illegal parking.jpeg';
-        case 'drainage':
-          return '/hole.jpeg';
-        case 'lighting':
-          return '/missing manhole cover.jpg';
-        case 'cleanliness':
-          return '/hole.jpeg';
-        default:
-          return '/missing manhole cover.jpg';
-      }
-    };
+    // Use the utility function for image mapping
 
     return {
       id: apiIssue.id,

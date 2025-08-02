@@ -40,7 +40,7 @@ export default function IssueDetail() {
         location: 'C.G road, Ahmedabad, Gujarat',
         reportedBy: 'Anonymous',
         reportedAt: 'Jun 02, 2025',
-        image: '/placeholder.svg',
+        image: '/Pothole on main road.jpg',
         coordinates: { lat: 23.0225, lng: 72.5714 }
       };
       setIssue(mockIssue);
