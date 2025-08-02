@@ -1403,3 +1403,13 @@ Watching for file changes with StatReloader
 "GET /api/categories/ HTTP/1.1" 200 1274
 "GET /api/categories/ HTTP/1.1" 200 1274
 "GET /api/issues/?page=1&page_size=6 HTTP/1.1" 200 11394
+"GET /api/categories/ HTTP/1.1" 200 1274
+"GET /api/issues/?page=1&page_size=6 HTTP/1.1" 200 11394
+"GET /api/categories/ HTTP/1.1" 200 1274
+"GET /api/issues/?page=1&page_size=6 HTTP/1.1" 200 11394
+"GET /api/categories/ HTTP/1.1" 200 1274
+"GET /api/categories/ HTTP/1.1" 200 1274
+"GET /api/categories/ HTTP/1.1" 200 1274
+"GET /api/issues/?page=1&page_size=6 HTTP/1.1" 200 11394
+"GET /api/categories/ HTTP/1.1" 200 1274
+"GET /api/issues/?page=1&page_size=6 HTTP/1.1" 200 11394
